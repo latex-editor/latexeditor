@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polygon Statement Editor</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">Polygon</div>
+    <div class="crumb">Problem Statement Editor</div>
+    <div class="actions">
+      <button class="tab active" data-mode="split">Edit &amp; Preview</button>
+      <button class="tab" data-mode="edit">Edit</button>
+      <button class="tab" data-mode="preview">Preview</button>
+      <button class="save" id="saveBtn">Save</button>
+      <button id="loadBtn">Load</button>
+      <button id="exportBtn">Export</button>
+      <button id="importBtn">Import</button>
+      <button id="resetBtn">Reset</button>
+      <input id="fileInput" type="file" accept="application/json,.json" hidden>
+    </div>
+  </header>
+
+  <main id="workspace" class="workspace split">
+    <div class="panel editor-panel">
+      <div class="panel-head">Statement <span>LaTeX</span></div>
+      <div class="editor-pane">
+        <div class="form-row"><label>Problem name</label><input id="name"></div>
+        <div class="two-col">
+          <div class="form-row"><label>Time limit</label><input id="time"></div>
+          <div class="form-row"><label>Memory limit</label><input id="memory"></div>
+        </div>
+        <div id="sections"></div>
+        <div class="examples-editor">
+          <div class="examples-head"><b>Examples</b><button id="addExample">Add example</button></div>
+          <div id="examples"></div>
+        </div>
+        <div class="help">LaTeX: <code>$x^2$</code> · 줄바꿈은 Enter 또는 <code>\\</code> · 코드: <code>`text`</code></div>
+      </div>
+    </div>
+
+    <div class="panel preview-panel">
+      <div class="panel-head">Preview <span>Codeforces style</span></div>
+      <div class="preview-scroll"><div id="preview" class="preview-page"></div></div>
+    </div>
+  </main>
+  <footer>Draft is stored locally in your browser · JSON Export / Import</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
