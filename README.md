@@ -1,6 +1,6 @@
 # Polygon Statement Editor — Static GitHub Pages version
 
-Vite/Node/npm가 필요 없는 순수 정적 사이트입니다.
+Vite/Node/npm가 필요 없는 순수 정적 사이트입니다..
 
 ## 사용
 
