@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Polygon Statement Editor</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,7 +15,6 @@
       <button class="tab active" data-mode="split">Edit &amp; Preview</button>
       <button class="tab" data-mode="edit">Edit</button>
       <button class="tab" data-mode="preview">Preview</button>
-      <button class="paste-tex" id="pasteTexBtn">Paste TeX</button>
       <button class="share" id="shareBtn">Share</button>
       <button class="save" id="saveBtn">Save</button>
       <button id="loadBtn">Load</button>
@@ -29,7 +27,7 @@
 
   <main id="workspace" class="workspace split">
     <div class="panel editor-panel">
-      <div class="panel-head">Statement <span>LaTeX Editor</span></div>
+      <div class="panel-head">Statement <span>Official LaTeX.js Engine</span></div>
       <div class="editor-pane">
         <div class="form-row"><label>Problem name</label><input id="name"></div>
         <div class="two-col">
@@ -41,7 +39,7 @@
           <div class="examples-head"><b>Examples</b><button id="addExample">Add example</button></div>
           <div id="examples"></div>
         </div>
-        <div class="help">LaTeX 지원: <code>$x^2$</code>, <code>\textbf{...}</code>, <code>\texttt{...}</code>, <code>\begin{itemize}</code>, <code>\begin{enumerate}</code></div>
+        <div class="help">공식 LaTeX.js 사용 중: 모든 LaTeX 표준 환경 및 수식 문법 지원</div>
       </div>
     </div>
 
@@ -50,10 +48,11 @@
       <div class="preview-scroll"><div id="preview" class="preview-page"></div></div>
     </div>
   </main>
-  <footer>Draft is stored locally in your browser · JSON Export / Import · URL Sharing</footer>
+  <footer>Draft is stored locally in your browser · Real LaTeX.js Engine · URL Sharing</footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<!-- Official LaTeX.js Library CDN -->
+<script src="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/latex.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
