@@ -9,6 +9,7 @@ body { margin: 0; background: #eef2f5; color: #333; font: 14px Arial, Helvetica,
 .actions button:hover { background: #fff; }
 .actions .tab { background: #3b3b3b; color: #ddd; border-color: #555; }
 .actions .tab.active { background: #fff; color: #333; }
+.actions .paste-tex { background: #8e44ad; color: #fff; border-color: #732d91; }
 .actions .share { background: #2b7bb9; color: #fff; border-color: #24689d; }
 .actions .save { background: #5b8f29; color: #fff; border-color: #527f25; }
 
@@ -52,11 +53,11 @@ body { margin: 0; background: #eef2f5; color: #333; font: 14px Arial, Helvetica,
 .cf-section { margin: 0 0 24px; }
 .cf-section h2 { font-size: 19px; margin: 0 0 8px; border-bottom: 0; font-weight: bold; color: #222; }
 
-/* Codeforces 스타일 리스트 규격 */
-.statement-list { margin: 10px 0 14px 24px; padding: 0; }
-.statement-list li { margin-bottom: 6px; line-height: 1.5; }
+/* 리스트 고유 CSS 정의 (중복 번호 및 개행 문제 방지) */
+.statement-list { margin: 8px 0 12px 20px; padding-left: 10px; }
 ul.statement-list { list-style-type: disc; }
 ol.statement-list { list-style-type: decimal; }
+.statement-list li { margin-bottom: 5px; line-height: 1.5; }
 
 .samples { display: flex; flex-direction: column; gap: 18px; }
 .sample { width: 100%; }
