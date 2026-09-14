@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Polygon Statement Editor</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/latex.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/katex.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,6 +17,7 @@
       <button class="tab active" data-mode="split">Edit &amp; Preview</button>
       <button class="tab" data-mode="edit">Edit</button>
       <button class="tab" data-mode="preview">Preview</button>
+      <button class="share" id="shareBtn">Share</button>
       <button class="save" id="saveBtn">Save</button>
       <button id="loadBtn">Load</button>
       <button id="exportBtn">Export</button>
@@ -27,7 +29,7 @@
 
   <main id="workspace" class="workspace split">
     <div class="panel editor-panel">
-      <div class="panel-head">Statement <span>LaTeX</span></div>
+      <div class="panel-head">Statement <span>LaTeX.js</span></div>
       <div class="editor-pane">
         <div class="form-row"><label>Problem name</label><input id="name"></div>
         <div class="two-col">
@@ -39,7 +41,7 @@
           <div class="examples-head"><b>Examples</b><button id="addExample">Add example</button></div>
           <div id="examples"></div>
         </div>
-        <div class="help">LaTeX: <code>$x^2$</code> · 줄바꿈은 Enter 또는 <code>\\</code> · 코드: <code>`text`</code></div>
+        <div class="help">LaTeX: 모든 LaTeX 문법 지원 (<code>$x^2$</code>, <code>\begin{equation}...\end{equation}</code>) · 코드: <code>`text`</code></div>
       </div>
     </div>
 
@@ -48,10 +50,10 @@
       <div class="preview-scroll"><div id="preview" class="preview-page"></div></div>
     </div>
   </main>
-  <footer>Draft is stored locally in your browser · JSON Export / Import</footer>
+  <footer>Draft is stored locally in your browser · JSON Export / Import · URL Sharing</footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/latex.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
