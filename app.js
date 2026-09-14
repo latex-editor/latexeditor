@@ -1,18 +1,19 @@
 const DRAFT_KEY = 'polygon-editor-draft';
 const SAVES_KEY = 'polygon-editor-saves';
 
+// 초기 문제를 깔끔한 A+B 문제로 설정
 const initial = {
-  name: 'A. Monocarp and Steak Block',
-  time: '2.0 seconds',
+  name: 'A. A+B Problem',
+  time: '1.0 second',
   memory: '256 megabytes',
-  legend: '셰프 모노카프(Monocarp)는 $N \\times M \\times K$ 크기의 직육면체 모양의 거대한 고기 블록을 요리하려고 합니다. 고기는 $1 \\times 1 \\times 1$ 크기의 작은 칸들로 이루어져 있으며, 초기 상태에서 모든 칸의 \\textbf{굽기 정도(Doneness)}는 $0$입니다.\n\n고기의 6개 면은 각각 다음과 같이 정의됩니다:\n\\begin{itemize}\n\\item \\texttt{LEFT}, \\texttt{RIGHT}: $N$ 길이 축의 양쪽 끝 면\n\\item \\texttt{BOTTOM}, \\texttt{TOP}: $M$ 길이 축의 양쪽 끝 면\n\\item \\texttt{FRONT}, \\texttt{BACK}: $K$ 길이 축의 양쪽 끝 면\n\\end{itemize}\n\n모노카프는 고기를 굽기 위해 다음 작업을 수행할 수 있습니다:\n\\begin{enumerate}\n\\item 6개 면 중 하나를 선택합니다. 선택한 면이 속한 축의 길이를 $L$이라 합니다.\n\\item 양의 정수 화력 $P$ ($P \\ge 1$)를 결정합니다.\n\\item 선택한 면으로부터 깊이가 $d$번째인 레이어($1 \\le d \\le L$)에 속한 모든 칸의 굽기 정도가 $\\max(0, P - d + 1)$만큼 증가합니다.\n\\end{enumerate}\n\n모노카프는 고기의 \\textbf{모든 칸의 굽기 정도가 $1$ 이상이며 전부 같아지도록} 만들고 싶습니다.\n\n목표를 달성하기 위한 \\textbf{최소 작업 횟수}와 그에 해당하는 \\textbf{작업 순서}를 구하는 프로그램을 작성하세요.',
-  input: 'The first line contains an integer $n$ ($1 \\le n \\le 10^9$).',
-  output: 'Print YES if the condition is satisfied, and NO otherwise.',
+  legend: '두 정수 $a$와 $b$가 주어졌을 때, $a + b$의 값을 구하는 프로그램을 작성하세요.',
+  input: '첫 번째 줄에 두 정수 $a$와 $b$ ($1 \\le a, b \\le 10^9$)가 공백으로 구분되어 주어집니다.',
+  output: '$a + b$의 결과를 출력합니다.',
   interaction: '',
-  notes: 'In the example above, $10^2=100$.',
+  notes: '첫 번째 예제에서 $1 + 2 = 3$입니다.',
   examples: [
-    { input: '10', output: 'YES' },
-    { input: '7', output: 'NO' }
+    { input: '1 2', output: '3' },
+    { input: '5 7', output: '12' }
   ]
 };
 
@@ -23,7 +24,6 @@ function setSaves(s) { localStorage.setItem(SAVES_KEY, JSON.stringify(s)); }
 function loadDraft() { try { const x = localStorage.getItem(DRAFT_KEY); return x ? JSON.parse(x) : null; } catch (e) { return null; } }
 function saveDraft() { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); } catch (e) {} }
 
-// URL 공유용 Base64 (유니코드 한글 지원)
 function toBase64(obj) {
   const str = JSON.stringify(obj);
   const bytes = new TextEncoder().encode(str);
@@ -70,111 +70,72 @@ function escapeHTML(s) {
     .replace(/'/g, '&#39;');
 }
 
-// 진짜 LaTeX.js 파싱 엔진 (Shadow DOM을 통한 CSS격리 적용)
-function renderLaTeXJSInto(containerElement, latexText) {
-  if (!containerElement) return;
+function parseLatexContent(text) {
+  if (!text) return '';
+  let s = String(text);
 
-  if (!containerElement.shadowRoot) {
-    containerElement.attachShadow({ mode: 'open' });
-  }
-  const shadow = containerElement.shadowRoot;
-  shadow.innerHTML = '';
-
-  if (!latexText || !latexText.trim()) return;
-
-  // LaTeX.js 기본 스타일 및 격리용 CSS 주입
-  const linkCSS = document.createElement('link');
-  linkCSS.rel = 'stylesheet';
-  linkCSS.href = 'https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/latex.css';
-
-  const linkKaTeX = document.createElement('link');
-  linkKaTeX.rel = 'stylesheet';
-  linkKaTeX.href = 'https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/katex.css';
-
-  const styleReset = document.createElement('style');
-  styleReset.textContent = `
-    :host { display: block; font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #222; line-height: 1.5; }
-    .body { padding: 0 !important; margin: 0 !important; width: 100% !important; }
-    p { margin: 0 0 10px 0; }
-  `;
-
-  shadow.appendChild(linkCSS);
-  shadow.appendChild(linkKaTeX);
-  shadow.appendChild(styleReset);
-
-  try {
-    // 문서 조각인 경우 LaTeX.js가 인식할 수 있도록 최소 document로 감싸기
-    let fullTeX = latexText;
-    if (!latexText.includes('\\documentclass')) {
-      fullTeX = `\\documentclass{article}\n\\begin{document}\n${latexText}\n\\end{document}`;
+  const mathBlocks = [];
+  const renderMath = (mathCode, display) => {
+    const placeholder = `___MATH_BLOCK_${mathBlocks.length}___`;
+    try {
+      if (window.katex) {
+        const html = katex.renderToString(mathCode.trim(), { displayMode: display, throwOnError: false });
+        mathBlocks.push(html);
+      } else {
+        mathBlocks.push(`<code>${escapeHTML(mathCode)}</code>`);
+      }
+    } catch (e) {
+      mathBlocks.push(`<span class="latex-error">${escapeHTML(mathCode)}</span>`);
     }
+    return placeholder;
+  };
 
-    if (window.latexjs && window.latexjs.parse) {
-      const generator = new latexjs.HtmlGenerator({ hyphenate: false });
-      const doc = latexjs.parse(fullTeX, { generator: generator });
-      const wrapper = document.createElement('div');
-      wrapper.appendChild(doc.domFragment());
-      shadow.appendChild(wrapper);
-    } else {
-      shadow.innerHTML += `<div>${escapeHTML(latexText)}</div>`;
-    }
-  } catch (err) {
-    const errDiv = document.createElement('div');
-    errDiv.style.cssText = 'color: #c00; background: #fee; padding: 6px; border: 1px solid #fcc; font-size: 12px; margin-bottom: 5px;';
-    errDiv.textContent = 'LaTeX Parsing Error: ' + err.message;
-    shadow.appendChild(errDiv);
+  s = s.replace(/\$\$([\s\S]+?)\$\$/g, (_, m) => renderMath(m, true));
+  s = s.replace(/\\\[([\s\S]+?)\\\]/g, (_, m) => renderMath(m, true));
+  s = s.replace(/\\begin\{(equation|align|eqnarray)\*?\}([\s\S]+?)\\end\{\1\*?\}/g, (_, env, m) => renderMath(`\\begin{${env}}${m}\\end{${env}}`, true));
+  s = s.replace(/\$([^\$\n]+?)\$/g, (_, m) => renderMath(m, false));
+  s = s.replace(/\\\(([\s\S]+?)\\\)/g, (_, m) => renderMath(m, false));
 
-    const fallback = document.createElement('div');
-    fallback.innerHTML = escapeHTML(latexText).replace(/\n/g, '<br>');
-    shadow.appendChild(fallback);
-  }
+  s = escapeHTML(s);
+
+  const parseList = (content, tagClass) => {
+    const rawItems = content.split(/\\item\s*/);
+    const items = rawItems.filter(item => item.trim().length > 0);
+    const listItemsHTML = items.map(item => `<li>${item.trim()}</li>`).join('');
+    return `<${tagClass} class="cf-list">${listItemsHTML}</${tagClass}>`;
+  };
+
+  s = s.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, (_, content) => parseList(content, 'ul'));
+  s = s.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g, (_, content) => parseList(content, 'ol'));
+
+  s = s.replace(/\\textbf\{([\s\S]*?)\}/g, '<strong>$1</strong>');
+  s = s.replace(/\\texttt\{([\s\S]*?)\}/g, '<code class="tt-text">$1</code>');
+  s = s.replace(/\\textit\{([\s\S]*?)\}/g, '<em>$1</em>');
+  s = s.replace(/\\underline\{([\s\S]*?)\}/g, '<u>$1</u>');
+  s = s.replace(/`([^`]+)`/g, '<code class="tt-text">$1</code>');
+
+  s = s.replace(/\\\\/g, '<br>');
+  s = s.replace(/\n\s*\n/g, '<div class="paragraph-gap"></div>');
+  s = s.replace(/\n/g, ' ');
+
+  s = s.replace(/___MATH_BLOCK_(\d+)___/g, (_, idx) => mathBlocks[parseInt(idx, 10)]);
+
+  return s;
+}
+
+function sectionHTML(title, text) {
+  return text ? `<section class="cf-section"><h2>${title}</h2><div class="section-content">${parseLatexContent(text)}</div></section>` : '';
 }
 
 function renderPreview() {
   const p = document.getElementById('preview');
-  p.innerHTML = '';
-
-  const titleDiv = document.createElement('div');
-  titleDiv.className = 'statement-title';
-  titleDiv.innerHTML = `<b>${escapeHTML(data.name)}</b>`;
-
-  const limitsDiv = document.createElement('div');
-  limitsDiv.className = 'limits';
-  limitsDiv.innerHTML = `<span>time limit per test</span> ${escapeHTML(data.time)} <span>memory limit per test</span> ${escapeHTML(data.memory)}`;
-
-  p.appendChild(titleDiv);
-  p.appendChild(limitsDiv);
-
-  for (const k of ['legend', 'input', 'output', 'interaction']) {
-    if (data[k]) {
-      const sec = document.createElement('section');
-      sec.className = 'cf-section';
-      sec.innerHTML = `<h2>${labels[k]}</h2>`;
-      const contentHolder = document.createElement('div');
-      sec.appendChild(contentHolder);
-      p.appendChild(sec);
-
-      renderLaTeXJSInto(contentHolder, data[k]);
-    }
-  }
-
+  let html = `<div class="statement-title"><b>${escapeHTML(data.name)}</b></div><div class="limits"><span>time limit per test</span> ${escapeHTML(data.time)} <span>memory limit per test</span> ${escapeHTML(data.memory)}</div>`;
+  for (const k of ['legend', 'input', 'output', 'interaction']) html += sectionHTML(labels[k], data[k]);
   if (data.examples?.length) {
-    const exSec = document.createElement('section');
-    exSec.className = 'cf-section';
-    exSec.innerHTML = `<h2>Examples</h2><div class="samples">${data.examples.map(e => `<div class="sample"><div class="sample-label">Input</div><pre>${escapeHTML(e.input)}</pre><div class="sample-label">Output</div><pre>${escapeHTML(e.output)}</pre></div>`).join('')}</div>`;
-    p.appendChild(exSec);
+    html += `<section class="cf-section"><h2>Examples</h2><div class="samples">${data.examples.map(e => `<div class="sample"><div class="sample-label">Input</div><pre>${escapeHTML(e.input)}</pre><div class="sample-label">Output</div><pre>${escapeHTML(e.output)}</pre></div>`).join('')}</div></section>`;
   }
-
-  if (data.notes) {
-    const noteSec = document.createElement('section');
-    noteSec.className = 'cf-section';
-    noteSec.innerHTML = `<h2>Note</h2>`;
-    const noteHolder = document.createElement('div');
-    noteSec.appendChild(noteHolder);
-    p.appendChild(noteSec);
-
-    renderLaTeXJSInto(noteHolder, data.notes);
-  }
+  html += sectionHTML('Note', data.notes);
+  p.innerHTML = html;
 }
 
 function renderEditor() {
@@ -226,7 +187,98 @@ document.getElementById('addExample').addEventListener('click', () => {
   renderEditor(); renderPreview(); saveDraft();
 });
 
-// 공유 링크 생성 기능 (site/#share={Base64})
+// 수정 및 강화된 Paste TeX 기능 (섹션 이탈 버그 방지)
+document.getElementById('pasteTexBtn').addEventListener('click', () => {
+  const raw = prompt('Polygon 문제 지문 전체(Legend ~ Note)를 붙여넣으세요:');
+  if (!raw || !raw.trim()) return;
+
+  const lines = raw.split(/\r?\n/);
+  let curSection = 'legend';
+  const secBuffers = { legend: [], input: [], output: [], interaction: [], examples: [], notes: [] };
+
+  for (let line of lines) {
+    const trimmed = line.trim();
+    if (/^Legend$/i.test(trimmed)) { curSection = 'legend'; continue; }
+    // 예제 섹션 진행 중일 때는 input/output 키워드에 의한 메인 섹션 재전환 방지
+    if (curSection !== 'examples' && /^Input$/i.test(trimmed)) { curSection = 'input'; continue; }
+    if (curSection !== 'examples' && /^Output$/i.test(trimmed)) { curSection = 'output'; continue; }
+    if (curSection !== 'examples' && /^Interaction$/i.test(trimmed)) { curSection = 'interaction'; continue; }
+    if (/^Examples?$/i.test(trimmed)) { curSection = 'examples'; continue; }
+    if (/^Notes?$/i.test(trimmed)) { curSection = 'notes'; continue; }
+
+    secBuffers[curSection].push(line);
+  }
+
+  data.legend = secBuffers.legend.join('\n').trim();
+  data.input = secBuffers.input.join('\n').trim();
+  data.output = secBuffers.output.join('\n').trim();
+  data.interaction = secBuffers.interaction.join('\n').trim();
+  data.notes = secBuffers.notes.join('\n').trim();
+
+  const exRaw = secBuffers.examples.join('\n').trim();
+  if (exRaw) {
+    const exPairs = [];
+    
+    // 1. 일반 텍스트 붙여넣기 방식 (input ... output ...)
+    const matches = [...exRaw.matchAll(/(?:input|Input)\s*\n([\s\S]*?)(?:output|Output)\s*\n([\s\S]*?)(?=(?:input|Input|$))/gi)];
+    if (matches.length > 0) {
+      matches.forEach(m => {
+        exPairs.push({ input: m[1].trim(), output: m[2].trim() });
+      });
+    } else {
+      // 2. LaTeX \ex{in}{out} 구문 방식
+      const texMatches = [...exRaw.matchAll(/\\ex\s*\{([\s\S]*?)\}\s*\{([\s\S]*?)\}/g)];
+      if (texMatches.length > 0) {
+        texMatches.forEach(m => {
+          exPairs.push({ input: m[1].trim(), output: m[2].trim() });
+        });
+      }
+    }
+
+    if (exPairs.length > 0) {
+      data.examples = exPairs;
+    }
+  }
+
+  saveDraft();
+  renderEditor();
+  renderPreview();
+});
+
+// Copy TeX 기능
+document.getElementById('copyTexBtn')?.addEventListener('click', () => {
+  const sections = [];
+
+  if (data.legend && data.legend.trim()) sections.push(`Legend\n${data.legend.trim()}`);
+  if (data.input && data.input.trim()) sections.push(`Input\n${data.input.trim()}`);
+  if (data.output && data.output.trim()) sections.push(`Output\n${data.output.trim()}`);
+  if (data.interaction && data.interaction.trim()) sections.push(`Interaction\n${data.interaction.trim()}`);
+  if (data.examples && data.examples.length > 0) {
+    let exStr = 'Examples\n';
+    data.examples.forEach((ex) => {
+      exStr += `input\n${ex.input.trim()}\noutput\n${ex.output.trim()}\n`;
+    });
+    sections.push(exStr.trim());
+  }
+  if (data.notes && data.notes.trim()) sections.push(`Note\n${data.notes.trim()}`);
+
+  const fullTex = sections.join('\n\n');
+
+  if (!fullTex) {
+    alert('복사할 지문 내용이 없습니다.');
+    return;
+  }
+
+  navigator.clipboard.writeText(fullTex).then(() => {
+    const btn = document.getElementById('copyTexBtn');
+    const oldText = btn.textContent;
+    btn.textContent = 'Copied TeX!';
+    setTimeout(() => btn.textContent = oldText, 1500);
+  }).catch(() => {
+    prompt('클립보드 자동 복사에 실패했습니다. 아래 텍스트를 복사하세요:', fullTex);
+  });
+});
+
 document.getElementById('shareBtn').addEventListener('click', () => {
   const shareUrl = `${window.location.origin}${window.location.pathname}#share=${toBase64(data)}`;
   navigator.clipboard.writeText(shareUrl).then(() => {
